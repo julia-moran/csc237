@@ -26,16 +26,15 @@
 #include "TermList.h"
 
 //Function Prototypes
-void batchMode(ifstream&, int, char**);
+void batchMode(ifstream&, int, char**, TermList*);
+void printBatchMode(string, double, TermList*, bool);
 void openFile(ifstream&, string&);
 int menu();
 int secondMenu(int);
 void choiceSwitch(ifstream&, int, int, string&);
 double getXValue();
 void printAnswer(double, double);
-void arrayListOption(int, string&);
-void vectorOption(int, string&);
-void doublyLinkedListOption(int, string&);
+void printOption(int, string&, TermList*, bool);
 
 int main(int argc, char **argv)
 {
@@ -44,11 +43,12 @@ int main(int argc, char **argv)
     string filename;
     int choice = 0; //first choice from the user
     int secondChoice = 0; //second choice from the user
+    TermList* ThePoly; //pointer to the polynomial, a TermList object
 
     //Enter batch mode if the user enters three arguments
     if(argc == 3)
     {
-        batchMode(ifs, argc, argv);
+        batchMode(ifs, argc, argv, ThePoly);
     }//end if
     //Otherwise, run the program without batch mode
     else
@@ -68,47 +68,66 @@ int main(int argc, char **argv)
     Parameters:     ifstream - ifs: input file stream
                     int - argc: number of commend line arguments the user inputs
                     char** - argv: array of arguments the user inputs
+                    *TermList - ThePoly: pointer to a TermList object that allows for
+                                polymorphism
     Return Value:   N/A
 */
-void batchMode(ifstream& ifs, int argc, char **argv)
+void batchMode(ifstream& ifs, int argc, char **argv, TermList *ThePoly)
 {
     //Initialize the filename and x value variables to the user's inputs
     string filename = argv[1];
     double xVal = atof(argv[2]);
 
-    //Declare remaining variables
-    TermArrayList arrayList; //array of objects
-    TermSTLObjList vectorTerms; //vector
-    TermDblLinkList doublyLinkedList; //doubly linked list
-    double answer = 0.0;
-
     //Open the file
     ifs.open(filename);
 
     //Array List Options
-    arrayList.readIntoList(filename);
-    arrayList.printIteratively();
-    answer = arrayList(xVal);
-    printAnswer(xVal, answer);
-    arrayList.printPtr();
-    answer = arrayList(xVal);
-    printAnswer(xVal, answer);
+    ThePoly = new TermArrayList();
+    printBatchMode(filename, xVal, ThePoly, true);
 
     //Vector Options
-    vectorTerms.readIntoList(filename);
-    vectorTerms.printIteratively();
-    answer = vectorTerms(xVal);
-    printAnswer(xVal, answer);
+    ThePoly = new TermSTLObjList();
+    printBatchMode(filename, xVal, ThePoly, false);
 
     //Doubly Linked List Options
-    doublyLinkedList.readIntoList(filename);
-    doublyLinkedList.printIteratively();
-    answer = doublyLinkedList(xVal);
-    printAnswer(xVal, answer);
+    ThePoly = new TermDblLinkList();
+    printBatchMode(filename, xVal, ThePoly, false);
 
     //Close the file
     ifs.close();
 }//end function batchMode
+
+/*
+    Function Name:  printBatchMode
+    Description:    Prints all options in batch mode
+    Parameters:     string - filename: The name of the file to read from
+                    double - xVal: The value of x to plug in the polynomial
+                    *TermList - ThePoly: Pointer to a TermList object, used to utilize polymorphism
+                    bool - isArray: A boolean value that indicates if the data structure to
+                                    operate on is an array
+    Return Value:   N/A
+*/
+void printBatchMode(string filename, double xVal, TermList* ThePoly, bool isArray)
+{
+    //Variable
+    double answer = 0.0;
+
+    //Read the data from the file to the data container
+    ThePoly->readIntoList(filename);
+
+    //Print the data iteratively
+    ThePoly->printIteratively();
+
+    //Prints the pointer option if the data container is an array
+    if(isArray == true)
+    {
+        ThePoly->printPtr();
+    }//end if
+
+    //Print the evaluated polynomial
+    answer = (*ThePoly)(xVal);
+    printAnswer(xVal, answer);
+}//end function printBatchMode
 
 /*
     Function Name:  openFile
@@ -227,6 +246,8 @@ int secondMenu(int choice)
 */
 void choiceSwitch(ifstream& ifs, int choice, int secondChoice, string& filename)
 {
+    TermList* ThePoly; //Pointer to TermList object, allows for polymorphism
+
     while(choice != 4)
     {
         switch(choice)
@@ -238,8 +259,11 @@ void choiceSwitch(ifstream& ifs, int choice, int secondChoice, string& filename)
 
                 while(secondChoice != 4)
                 {
+                    //Point the polynomial at the array container
+                    ThePoly = new TermArrayList();
+
                     //Run the chosen action on the array
-                    arrayListOption(secondChoice, filename);
+                    printOption(secondChoice, filename, ThePoly, true);
 
                     //Return to the menu for array options
                     secondChoice = secondMenu(choice);
@@ -253,8 +277,11 @@ void choiceSwitch(ifstream& ifs, int choice, int secondChoice, string& filename)
 
                 while(secondChoice != 4)
                 {
+                    //Point the polynomial at the vector container
+                    ThePoly = new TermSTLObjList();
+
                     //Run the chosen action on the vector
-                    vectorOption(secondChoice, filename);
+                    printOption(secondChoice, filename, ThePoly, false);
 
                     //Return to the menu for STL object options
                     secondChoice = secondMenu(choice);
@@ -268,8 +295,11 @@ void choiceSwitch(ifstream& ifs, int choice, int secondChoice, string& filename)
 
                 while(secondChoice != 4)
                 {
+                    //Point the polynomial at the doubly linked list container
+                    ThePoly = new TermDblLinkList();
+
                     //Run the chosen action on the doubly linked list
-                    doublyLinkedListOption(secondChoice, filename);
+                    printOption(secondChoice, filename, ThePoly, false);
 
                     //Return to the menu for doubly linked list options
                     secondChoice = secondMenu(choice);
@@ -326,144 +356,57 @@ void printAnswer(double xToEvaluate, double answer)
 }//end function printAnswer
 
 /*
-    Function Name:  arrayListOption
-    Description:    Calls the appropriate function out of the avaliable options
-                    for the array of objects
-    Parameters:     int - secondChoice: second choice from the user, indicates
-                                        whether to print iteratively, print
-                                        with a pointer, evaluate the polynomial,
-                                        or exit
-                    string - filename: name of the file to read the data from
+    Function Name:  printOption
+    Description:    Performs the chosen action on the chosen data structure
+    Parameters:     int - secondChoice: The second choice from the user, indicates whether to
+                          print the contents of the vector iteratively or
+                          recursively or with a pointer for the array option,
+                          evaluate the polynomial, or exit
+                    string - filename: The name of the file to read from
+                    *TermList - ThePoly: Pointer to a TermList object, allows for polymorphism
+                    bool - isArray: Boolean value to indicate if the chosen data structure is an array
     Return Value:   N/A
 */
-void arrayListOption(int secondChoice, string& filename)
+void printOption(int secondChoice, string& filename, TermList* ThePoly, bool isArray)
 {
     //Variables
-    TermArrayList arrayList; //array of Term objects
-    double xToEvaluate = 0.0;
-    double answer = 0.0;
-
-    //Read the data into an array of objects
-    arrayList.readIntoList(filename);
-
-    switch(secondChoice)
-    {
-        //Case of printing iteratively
-        case 1:
-            arrayList.printIteratively();
-        break;
-
-        //Case of printing using a pointer
-        case 2:
-            arrayList.printPtr();
-        break;
-
-        //Case of evaluating the polynomial
-        case 3:
-            xToEvaluate = getXValue();
-            answer = arrayList(xToEvaluate);
-            printAnswer(xToEvaluate, answer);
-        break;
-
-        //Case of exiting
-        case 4:
-        break;
-
-        //Case when the user's input is invalid
-        default:
-            cout << "I cannot understand " << secondChoice << ".  Try again" << endl;
-        break;
-    }//end switch
-}//end function arrayListOption
-
-/*
-    Function Name:  vectorOption
-    Description:    Calls the appropriate function out of the avaliable options
-                    for the STL container option, which is a vector
-    Parameters:     int - secondChoice: second choice from the user, indicates
-                                        whether to print the contents of the
-                                        vector iteratively, evaluate the
-                                        polynomial, or exit
-    Return Value:   N/A
-*/
-void vectorOption(int secondChoice, string& filename)
-{
-    //Variables
-    TermSTLObjList vectorTerms; //vector
     double answer = 0.0;
     double xToEvaluate = 0.0;
 
-    //Read the contents of the file to a vector
-    vectorTerms.readIntoList(filename);
+    //Read the contents of the file
+    ThePoly->readIntoList(filename);
 
-    switch(secondChoice)
+    //Print the data iteratively
+    if(secondChoice == 1)
     {
-        //Case of printing the vector's contents iteratively
-        case 1:
-            vectorTerms.printIteratively();
-        break;
+        ThePoly->printIteratively();
+    }//end if
 
-        //Case of evaluating the polynomial
-        case 3:
-            xToEvaluate = getXValue();
-            answer = vectorTerms(xToEvaluate);
-            printAnswer(xToEvaluate, answer);
-        break;
-
-        //Case of exiting
-        case 4:
-        break;
-
-        //Case when the user's input is invalid
-        default:
-            cout << "I cannot understand " << secondChoice << ".  Try again" << endl;
-        break;
-    }//end switch
-}//end function vectorOption
-
-/*
-    Function Name:  doublyLinkedListOption
-    Description:    Calls the appropriate funtion out of the avaliable options
-                    for the doubly linked list option
-    Parameters:     int - secondChoice: second choice from the user, indicates
-                                        whether to print the contents of the
-                                        doubly linked list iteratively, evaluate
-                                        the polynomial, or exit
-                    string - filename: name of the file to read in the data from
-    Return Value:   N/A
-*/
-void doublyLinkedListOption(int secondChoice, string& filename)
-{
-    //Variables
-    TermDblLinkList doublyLinkedList; //dounly linked list
-    double xToEvaluate = 0.0;
-    double answer = 0.0;
-
-    //Read the data from the file into a doubly linked list
-    doublyLinkedList.readIntoList(filename);
-
-    switch(secondChoice)
+    //Print the data with a pointer if it is an array
+    else if((secondChoice == 2) && (isArray == true))
     {
-        //Case of printing the contents iteratively
-        case 1:
-            doublyLinkedList.printIteratively();
-        break;
+        ThePoly->printPtr();
+    }//end else if
 
-        //Case of evaluating the polynomial
-        case 3:
-            xToEvaluate = getXValue();
-            answer = doublyLinkedList(xToEvaluate);
-            printAnswer(xToEvaluate, answer);
-        break;
+    //Evaulate the polynomial
+    else if(secondChoice == 3)
+    {
+        xToEvaluate = getXValue(); //Get the value of x from the user
+        answer = (*ThePoly)(xToEvaluate); //Plug in the x value to the polynomial
 
-        //Case of exiting
-        case 4:
-        break;
+        //Print the result after plugging in the value of x to the polynomial
+        printAnswer(xToEvaluate, answer);
+    }//end else if
 
-        //Case when the user's input is invalid
-        default:
-            cout << "I cannot understand " << secondChoice << ".  Try again" << endl;
-        break;
-    }//end switch
-}//end function doublyLinkedListOption
+    //Exit
+    else if(secondChoice == 4)
+    {
+    }//end else if
+
+    //Invalid input
+    else
+    {
+        cout << "I cannot understand " << secondChoice << ".  Try again" << endl;
+    }//end else
+}//end function printOption
 
