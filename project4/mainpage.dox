@@ -1,0 +1,28 @@
+/**
+\mainpage  Project 4
+\b Header
+- Author:         Julia Moran
+- Major:          Computer Science
+- Creation Date:  December 3, 2022
+- Due Date:       December 4, 2022
+- Course:         CSC237 010
+- Professor Name: Dr. Speigel
+- Assignment:     #4
+
+\n
+The following documentation describes the implementation of a binary tree that
+can store terms in a polynomial. The binary tree of terms will be created with
+the TermTree object, which inherits from BinaryTree<Term>, which is instatiated
+from the templated class BinaryTree<eltType>.
+\n
+---
+\n
+The documentation also describes the application of the program, which
+will accept a user's choice of action to add a node, delete a node, print the
+tree as a polynomial, print the tree as a tree, or quit. Each node will contain
+a Term object containing a coefficient and exponent and will be stored in a 
+binary tree using the templated class BinaryTree<eltType>. 
+\n
+---
+\n
+*/
