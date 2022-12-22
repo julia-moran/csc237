@@ -1,0 +1,38 @@
+/**
+\mainpage  Project 3
+\b Header
+- Author:         Julia Moran
+- Major:          Computer Science
+- Creation Date:  October 16, 2022
+- Due Date:       November 11, 2022
+- Course:         CSC237 010
+- Professor Name: Dr. Speigel
+- Assignment:     #3
+
+\n
+The following documentation describes the implementation of the object class Term.h using an 
+abstract list container class of TermList.h to implement an array of objects, a doubly linked
+list, and a vector. 
+\n
+---
+\n
+The documentation also describes the application of the program, which
+will read in a file with numbers respresenting the coefficients
+and exponents of polynomial. It will then store the data in an array
+of objects, a doubly linked list, or a vector depending on the user's
+input and print the information in the method the user chooses. It will
+finally accept a number as x from the user to compute P(x).
+\n
+---
+\n
+The abstract class can be implemented in a number of different ways
+- TermArrayList.h 
+- TermSTLObjList.h 
+- TermDblLinkList.h. 
+\n
+\n
+---
+
+Each different container has different frameworks but are used by the application in the exact same way with the exception of 
+TermArrayList.h, which has a print using a pointer function.
+*/
